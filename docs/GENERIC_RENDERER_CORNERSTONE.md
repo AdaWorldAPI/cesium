@@ -122,11 +122,17 @@ inside this tile"* is one NiblePath prefix scan (the HHTL payoff).
 
 ### 4.2 "Markov" — cascade routing across the pyramid
 
-Traversal down the pyramid is a Markov cascade (our HHTL cascade; the
-substrate's Chapman-Kolmogorov guarantee, `I-SUBSTRATE-MARKOV`): a frontier
-vector at level *k* times a transition table routes to the candidate tiles at
-level *k+1*. ~95 % of pairs are skipped via the cascade. The hot path is a table
-lookup + popcount + palette distance — never a dense matrix.
+Traversal down the pyramid is Markov in the plain **first-order** sense: the
+routing decision at level *k+1* depends only on the level-*k* frontier state and
+the transition table — by construction, no history. (Scope note: this is NOT
+the workspace's `I-SUBSTRATE-MARKOV` iron rule, which concerns VSA-bundle
+algebra in d=10000; do not cite that rule for tile routing — the two are
+unrelated mechanisms that happen to share the word "Markov".) A frontier vector
+at level *k* times a transition table routes to the candidate tiles at level
+*k+1*. Skip-rate **target**: the attention-domain HHTL cascade measured ~95 %
+pair-skips; the tile-pyramid skip rate is a target pending its own measurement
+(the D-MTP-3 probe), not a transplanted fact. The hot path is a table lookup +
+popcount + palette distance — never a dense matrix.
 
 ```
 frontier_vector[route_key] × transition_table[route_key → child] → child scores
@@ -177,11 +183,17 @@ graph renders in the same pyramid.
 - **Edges → swept Gaussian tubes.** Each edge (a Neo4j relationship, an OWL
   object-property triple) becomes a thin anisotropic Gaussian swept between
   endpoints; SH color encodes edge type.
-- **Same identity, same NiblePath.** A node's 128-bit identity (`[SchemaPtr |
-  NiblePath | shape_hash | family-leaf]`) IS its tile address — so *"render the
-  sub-graph under this OWL class"* is the same prefix scan as *"render the OSM
-  Ways in this tile."* Geo and graph are not two renderers; they are two prefix
-  cones of one pyramid.
+- **Same machinery, two prefix pyramids.** Precision matters here: the OSM
+  payload is keyed by a **spatial** prefix (Cesium-TMS quadkey), while a graph
+  node's 128-bit identity (`[SchemaPtr | NiblePath | shape_hash | family-leaf]`)
+  carries a **semantic** prefix (the class-hierarchy NiblePath). These are
+  *different coordinate systems* — they are NOT one pyramid. What is shared is
+  the radix prefix-scan machinery: *"render the sub-graph under this OWL class"*
+  and *"render the OSM Ways in this tile"* are the same O(1) prefix-cone
+  operation over different prefix spaces. To paint a graph, a **layout function
+  bridges semantic → spatial** (force-directed or hierarchy-projected positions,
+  then optionally re-keyed by spatial quadkey for LOD streaming). One traversal
+  + one shader, two pyramids, one explicit bridge.
 
 This is why the substrate is generic: **a city and an ontology are both
 positioned-primitive-with-covariance fields**, and MTPPS does not care which.
@@ -245,8 +257,9 @@ low wrong-high-confidence rate · ρ-vs-reference ≥ 0.99 (Palette256/ADR-024)
   certified.
 - Do **not** let certificates become decorative — they must change behavior.
 - Do **not** implement every payload before the §8 fixture proves the substrate.
-- Do **not** conflate the geo and graph payloads — they are sibling prefix cones
-  of one pyramid, not a merged schema.
+- Do **not** conflate the geo and graph payloads — they are two prefix pyramids
+  (spatial TMS vs semantic class-hierarchy) sharing one traversal machinery; the
+  semantic→spatial layout bridge is explicit, never implicit (§6).
 
 ---
 
