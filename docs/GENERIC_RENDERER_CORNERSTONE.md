@@ -185,8 +185,11 @@ graph renders in the same pyramid.
   endpoints; SH color encodes edge type.
 - **Same machinery, two prefix pyramids.** Precision matters here: the OSM
   payload is keyed by a **spatial** prefix (Cesium-TMS quadkey), while a graph
-  node's 128-bit identity (`[SchemaPtr | NiblePath | shape_hash | family-leaf]`)
-  carries a **semantic** prefix (the class-hierarchy NiblePath). These are
+  node's 128-bit identity carries a **semantic** prefix. (That identity's canon
+  is `OGAR/CLAUDE.md`: `classid — HEEL — HIP — TWIG — [basin·leaf + identity]`;
+  the `lance_graph_contract::NodeGuid` struct is audited *against* the canon,
+  never the reverse. The semantic prefix is the HEEL/HIP/TWIG cascade path.)
+  These are
   *different coordinate systems* — they are NOT one pyramid. What is shared is
   the radix prefix-scan machinery: *"render the sub-graph under this OWL class"*
   and *"render the OSM Ways in this tile"* are the same O(1) prefix-cone
